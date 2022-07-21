@@ -1,7 +1,7 @@
 #!/bin/bash
 
 files=( "main.c" )
-args=( "-O2" "-Wfatal-errors" )
+args=( "-O2" "-Wfatal-errors" "-Wno-unused-result" )
 
 mkdir bin 2> /dev/null
 gcc ${args[@]} ${files[@]} -o bin/machinespeak || read
