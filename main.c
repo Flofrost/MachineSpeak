@@ -124,9 +124,12 @@ int main(int argc, char** argv){
         sprintf(command,"rm %s",outfilename);
         system(command);
 
-        for(int i = 0 ; argv[1][i] ; i++) writeFile(argv[1][i]);
+        for(int i = 0 ; msgout[i] ; i++) writeFile(msgout[i]);
 
         endFile();
+
+        sprintf(command,"aplay -q %s 2> /dev/null",outfilename);
+        system(command);
 
     }else help();
 
