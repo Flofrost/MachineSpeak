@@ -5,8 +5,12 @@
 #define SOUND_PATH "./audio"
 #define system(x) (system(x) >> 8)
 
-// char outfilename[256] = "/tmp/machinespeak/out.wav";
-char outfilename[256] = "audio/out.wav";
+#define QUIET   0x80
+#define VERBOSE 0x40
+#define MODE    0x03
+
+char* outfilename = "/tmp/machinespeak/out.wav";
+unsigned char option = 0x00; // 0bQVXXXXMM   Q = quiet  V = Verbose   M = mode (Modes: 0 nato, 1 hex, 2 morse)
 const char sounds[40] = "0123456779abcdefghijklmopqrstuvwxyz_.-";
 const unsigned char wavHeader[44] = {0x52,0x49,0x46,0x46,0x00,0x00,0x00,0x00,0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x44,0xac,0x00,0x00,0x88,0x58,0x01,0x00,0x02,0x00,0x10,0x00,0x64,0x61,0x74,0x61,0x00,0x00,0x00,0x00};
 
@@ -14,12 +18,13 @@ void help(){
 
     printf("\
     \rMachine Speak: Give NATO style secret messages.\n\
-    \r\tUsage: machinespeak [options] [--] <message>\n\
+    \r\tUsage: machinespeak [options] <message>\n\
     \r\tOptions:\n\
     \r\t\t-h     \t\tDisplay this message and quit\n\
     \r\t\t-m     \t\tUse morse code instead\n\
-    \r\t\t-o path\t\tSave message to path (.wav will be automatically appeneded)\n\
+    \r\t\t-o path\t\tSave message to path\n\
     \r\t\t-q     \t\tDo not play message. (handy with -o)\n\
+    \r\t\t-v     \t\tVerbose, for debugging.\n\
     \r\t\t-x     \t\tUse ASCII hex codes instead\n\
     ");
 
@@ -30,6 +35,40 @@ int msglen(char* str){
     int res=0;
     for(res ; str[res] ; res++);
     return res;
+}
+
+char* messageMallocator(char* msg){
+
+}
+
+char* argParser(int argc, char** argv){
+    if(argc > 1){
+        for(int i = 1 ; i < argc ; i++){
+            if((argv[i][0] == '-') && (argv[i][1] == 'o'))
+                outfilename = argv[++i];
+            else if(argv[i][0] == '-')
+                for(int j = 1 ; argv[i][j] ; j++)
+                    switch(argv[i][j]){
+                        case 'h':
+                            help();
+                            break;
+                        case 'm':
+                            option = (option & 0xFC) | 2;
+                            break;
+                        case 'q':
+                            option |= 0x80;
+                            break;
+                        case 'v':
+                            option |= 0x40;
+                            break;
+                        case 'x':
+                            option = (option & 0xFC) | 1;
+                            break;
+                    }
+            else
+                return argv[i];
+        }
+    }else help();
 }
 
 void transcriptMessage(unsigned char mode,char* message, char* output){
@@ -57,10 +96,6 @@ void transcriptMessage(unsigned char mode,char* message, char* output){
                     output[i] = '_';
                 break;
         }
-}
-
-void playMessage(char* message){
-    for(int i = 0 ; message[i] ; i++);
 }
 
 void writeFile(char sound){
@@ -101,7 +136,7 @@ void endFile(){
     int32_t size = 0;
     FILE* outfile = fopen(outfilename,"r+");
     while(fgetc(outfile) != EOF) size++;
-    
+
     size -= 8;
     fseek(outfile,4,SEEK_SET);
     fwrite(&size,4,1,outfile);
@@ -114,24 +149,44 @@ void endFile(){
 
 int main(int argc, char** argv){
 
-    if(argc > 1){
-        
-        char* msgout = (char*) malloc(msglen(argv[1]) * sizeof(char));
-        char command[512];
+    char* inmsg = argParser(argc, argv);
 
-        transcriptMessage(0,argv[1],msgout);
+    if(option & VERBOSE){
+        printf("Flags : ");
+        if(option & QUIET) printf("Quiet ");
+        if(option & VERBOSE) printf("Verbose ");
+        printf("\nMode : ");
+        switch(option & MODE){
+            case 0:
+                printf("Nato");
+                break;
+            case 1:
+                printf("Hex-ASCII");
+                break;
+            case 2:
+                printf("Morse");
+                break;
+        }
+        printf("\nOutput File : %s\n", outfilename);
+        printf("Message : %s\n", inmsg);
+    }
 
-        sprintf(command,"rm %s",outfilename);
-        system(command);
 
-        for(int i = 0 ; msgout[i] ; i++) writeFile(msgout[i]);
+    // char* msgout = (char*) malloc(msglen(argv[1]) * sizeof(char));
+    // char command[512];
 
-        endFile();
 
-        sprintf(command,"aplay -q %s 2> /dev/null",outfilename);
-        system(command);
+    // transcriptMessage(0,argv[1],msgout);
 
-    }else help();
+    // sprintf(command,"rm %s",outfilename);
+    // system(command);
+
+    // for(int i = 0 ; msgout[i] ; i++) writeFile(msgout[i]);
+
+    // endFile();
+
+    // sprintf(command,"aplay -q %s 2> /dev/null",outfilename);
+    // system(command);
 
     return 0;
 }
