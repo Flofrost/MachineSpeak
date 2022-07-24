@@ -12,7 +12,7 @@
 char* outfilename = "/tmp/machinespeak/out.wav";
 unsigned char option = 0x00; // 0bQVXXXXMM   Q = quiet  V = Verbose   M = mode (Modes: 0 nato, 1 hex, 2 morse)
 const char sounds[40] = "0123456779abcdefghijklmopqrstuvwxyz_.-";
-const unsigned char wavHeader[44] = {0x52,0x49,0x46,0x46,0x00,0x00,0x00,0x00,0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x44,0xac,0x00,0x00,0x88,0x58,0x01,0x00,0x02,0x00,0x10,0x00,0x64,0x61,0x74,0x61,0x00,0x00,0x00,0x00};
+const unsigned char wavHeader[44] = {0x52,0x49,0x46,0x46,0x56,0x30,0x00,0x00,0x57,0x41,0x56,0x45,0x66,0x6d,0x74,0x20,0x10,0x00,0x00,0x00,0x01,0x00,0x01,0x00,0x40,0x1f,0x00,0x00,0x40,0x1f,0x00,0x00,0x01,0x00,0x08,0x00,0x64,0x61,0x74,0x61,0x31,0x30,0x00,0x00};
 
 void help(){
 
@@ -35,10 +35,6 @@ int msglen(char* str){
     int res=0;
     for(res ; str[res] ; res++);
     return res;
-}
-
-char* messageMallocator(char* msg){
-
 }
 
 char* argParser(int argc, char** argv){
@@ -69,6 +65,18 @@ char* argParser(int argc, char** argv){
                 return argv[i];
         }
     }else help();
+}
+
+char* messageMallocator(char* msg){
+    switch(option & MODE){
+        case 0:
+            return (char*) malloc(msglen(msg) * sizeof(char));
+            break;
+        case 1:
+            break;
+        case 2:
+            break;
+    }
 }
 
 void transcriptMessage(unsigned char mode,char* message, char* output){
@@ -149,7 +157,8 @@ void endFile(){
 
 int main(int argc, char** argv){
 
-    char* inmsg = argParser(argc, argv);
+    char command[512];
+    char* msgin = argParser(argc, argv);
 
     if(option & VERBOSE){
         printf("Flags : ");
@@ -168,25 +177,25 @@ int main(int argc, char** argv){
                 break;
         }
         printf("\nOutput File : %s\n", outfilename);
-        printf("Message : %s\n", inmsg);
+        printf("Message : %s\n", msgin);
     }
 
 
-    // char* msgout = (char*) malloc(msglen(argv[1]) * sizeof(char));
-    // char command[512];
+    char* msgout = messageMallocator(msgin);
 
+    transcriptMessage(0,msgin,msgout);
 
-    // transcriptMessage(0,argv[1],msgout);
+    if(option & VERBOSE) printf("Transcripted Message : %s\n",msgout);
 
-    // sprintf(command,"rm %s",outfilename);
-    // system(command);
+    sprintf(command,"rm %s",outfilename);
+    system(command);
 
-    // for(int i = 0 ; msgout[i] ; i++) writeFile(msgout[i]);
+    for(int i = 0 ; msgout[i] ; i++) writeFile(msgout[i]);
 
-    // endFile();
+    endFile();
 
-    // sprintf(command,"aplay -q %s 2> /dev/null",outfilename);
-    // system(command);
+    sprintf(command,"aplay -q %s 2> /dev/null",outfilename);
+    system(command);
 
     return 0;
 }
