@@ -89,7 +89,7 @@ void transcriptMessage(unsigned char mode,char* message, char* output){
                 output[i] = '.';
                 break;
             case '!':
-                output[i] = '.';
+                output[i] = '-';
                 break;
             case '?':
                 output[i] = '.';
@@ -110,7 +110,8 @@ void writeFile(char sound){
 
     char command[512];
     char infilename[256];
-    sprintf(command, "exit $(ls %s | grep -P \"%c\\.\\d\\.wav\" | wc -l)",SOUND_PATH,sound);
+    if(sound != '.' && sound != '-') sprintf(command, "exit $(ls -A %s | grep -P \"%c\\.\\d\\.wav\" | wc -l)",SOUND_PATH,sound);
+    else sprintf(command, "exit $(ls -A %s | grep -P \"\\%c\\.\\d\\.wav\" | wc -l)",SOUND_PATH,sound);
     int nfile = system(command);
     nfile = rand() % nfile;
     sprintf(infilename,"%s/%c.%d.wav",SOUND_PATH,sound,nfile);
