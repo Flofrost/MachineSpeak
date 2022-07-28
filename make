@@ -1,6 +1,6 @@
 #!/bin/bash
 
-files=( "main.c" )
+files=( "main.c" "src/mchnSpk.c" )
 args=( "-O2" "-Wfatal-errors" "-Wno-unused-result" )
 
 mkdir bin 2> /dev/null
