@@ -125,13 +125,22 @@ void writeFile(char sound){
 
     while(!feof(infile)){
         nbytes = fread(buff,1,nbytes,infile);
-        if(option & NOISE) for(int ii = 0 ; ii < nbytes ; ii++) buff[ii] += ((rand() % AMP) - (AMP >> 1));
+        if(option & NOISE) for(int ii = 0 ; ii < nbytes ; ii++){
+            int tmp = buff[ii] + ((rand() % AMP) - (AMP >> 1));
+            if(tmp > 255) buff[ii] = 255;
+            else if(tmp < 0) buff[ii] = 0;
+            else buff[ii] = tmp;
+        }
         fwrite(buff,1,nbytes,outfile);
     }
 
     for(int i = 0; i < interval; i++){
-        if(option & NOISE) for(int ii = 0 ; ii < 256 ; ii++) buff[ii] = 127 + ((rand() % AMP) - (AMP >> 1));
-        else for(int ii = 0 ; ii < 256 ; ii++) buff[ii] = 127;
+        if(option & NOISE) for(int ii = 0 ; ii < 256 ; ii++){
+            int tmp = 127 + (rand() % AMP) - (AMP >> 1);
+            if(tmp > 255) buff[ii] = 255;
+            else if(tmp < 0) buff[ii] = 0;
+            else buff[ii] = tmp;
+        }else for(int ii = 0 ; ii < 256 ; ii++) buff[ii] = 127;
         fwrite(buff,1,256,outfile);
     }
 

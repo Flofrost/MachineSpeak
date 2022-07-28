@@ -13,7 +13,7 @@
 #define NOISE   0x20
 #define MODE    0x03
 
-#define AMP     20
+#define AMP     30
 
 
 extern char* outfilename;
